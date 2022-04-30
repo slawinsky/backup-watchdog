@@ -8,7 +8,7 @@ public class DirectoryWatch {
     private Path path;
 
     public DirectoryWatch(String path) throws IOException, InterruptedException {
-        this.path = Paths.get(System.getProperty(path));
+        this.path = Path.of(path);
         startService();
     }
 
