@@ -9,6 +9,7 @@ public class DirectoryWatch {
     private Path path;
     private long interval;
     private boolean isFileCreated;
+    private String detailsMessage;
 
     public DirectoryWatch(String path) throws IOException, InterruptedException {
         this.path = Path.of(path);
@@ -16,6 +17,10 @@ public class DirectoryWatch {
         this.isFileCreated = false;
         initTimer();
         startService();
+    }
+
+    private void sendMessage() {
+
     }
 
     private void initTimer() {
@@ -33,9 +38,12 @@ public class DirectoryWatch {
 
     private void checkIsFileCreated() {
         if(isFileCreated) {
-            System.out.println("Backup został utworzony!");
+            System.out.println("Backup został utworzony!\n");
+            System.out.println(detailsMessage);
+            isFileCreated = false;
+            detailsMessage = "";
         } else {
-            System.out.println("Backup nie został utworzony!");
+            sendMessage();
         }
     }
 
@@ -50,7 +58,7 @@ public class DirectoryWatch {
         WatchKey key;
         while((key = watchService.take()) != null) {
             for(WatchEvent<?> event : key.pollEvents()) {
-                System.out.println("Event: " + event.kind() + ", wykorzystany plik: " + event.context() + ".");
+                detailsMessage += "Utworzony plik: " + event.context() + ".\n";
                 isFileCreated = true;
             }
             key.reset();
