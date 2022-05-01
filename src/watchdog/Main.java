@@ -9,8 +9,5 @@ public class Main {
 
 //        String path = "C:\\Users\\Kuba\\Desktop\\backup-tests";
 //        new DirectoryWatch(path);
-
-        MailSender mailSender = new MailSender(true, "smtp.dpoczta.pl", "587", "jakub@exabytes.pl", "7zzQ4eJk7U", "Testowa wiadomość", "jakub@exabytes.pl");
-        mailSender.sendMessage();
     }
 }
