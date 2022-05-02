@@ -1,13 +1,18 @@
 package watchdog;
 
+import javax.mail.MessagingException;
 import java.io.IOException;
 import java.nio.file.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class DirectoryWatch {
     private Path path;
-    private long interval;
+    private int interval;
     private boolean isFileCreated;
     private String detailsMessage;
 
@@ -15,50 +20,54 @@ public class DirectoryWatch {
         this.path = Path.of(path);
         this.interval = 10000;
         this.isFileCreated = false;
+        this.detailsMessage = "";
         initTimer();
         startService();
     }
 
-    private void sendMessage() {
-
+    //        create mailsender class, pass server and user data and send notification email
+    private void sendMessage() throws MessagingException {
+        MailSender mailSender = new MailSender(true, "mail.server.com", "465", "your@address.com", "password123", detailsMessage, "recipient@address.com");
+        mailSender.sendMessage();
     }
 
     private void initTimer() {
-        System.out.println("start initTimer\n");
         Timer timer = new Timer();
-        int begin = 0;
-        int interval = 10000;
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                checkIsFileCreated();
+                try {
+                    checkIsFileCreated();
+                } catch (MessagingException e) {
+                    e.printStackTrace();
+                }
             }
-        }, begin, interval);
+        }, interval, interval);
     }
 
-    private void checkIsFileCreated() {
-        if(isFileCreated) {
-            System.out.println("Backup został utworzony!\n");
-            System.out.println(detailsMessage);
-            isFileCreated = false;
-            detailsMessage = "";
-        } else {
-            sendMessage();
-        }
+    private void checkIsFileCreated() throws MessagingException {
+        sendMessage();
+        clearDetails();
+    }
+
+    private void clearDetails() {
+        isFileCreated = false;
+        detailsMessage = "";
     }
 
     private void startService() throws IOException, InterruptedException {
-        System.out.println("start startService\n");
         WatchService watchService = FileSystems.getDefault().newWatchService();
         path.register(
                 watchService,
                 StandardWatchEventKinds.ENTRY_CREATE
         );
 
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("d/MM/YYYY HH:MM");
         WatchKey key;
         while((key = watchService.take()) != null) {
             for(WatchEvent<?> event : key.pollEvents()) {
-                detailsMessage += "Utworzony plik: " + event.context() + ".\n";
+                LocalDateTime time = LocalDateTime.now();
+                detailsMessage += "Created file: " + event.context() + " | date: " + dtf.format(time) + ".\r\n";
                 isFileCreated = true;
             }
             key.reset();
